@@ -45,10 +45,9 @@ WORKDIR /app
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV UV_COMPILE_BYTECODE=1
 
 # Expose port (if needed for web apps)
 EXPOSE 8000
 
-# Run the application
-CMD ["uv", "run", "app"]
+# Run the application directly with Python
+CMD ["python", "-m", "src.main"]

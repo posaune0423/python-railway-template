@@ -1,325 +1,227 @@
-# 🚀 Python Railway Template with Selenium Standalone Chromium
+# Python Railway Template - Selenium Standalone Chromium
 
-Modern Python template for Railway deployment with **Selenium Standalone Chromium** using official Docker images. Clean architecture with modular design and beautiful colored logging!
+Selenium Standalone Chromium を使用した Remote WebDriver スクレイピングアプリケーションのテンプレートです。
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/new)
+## 🚀 特徴
 
-## ✨ Features
+- **Selenium Standalone Chromium**: 安定したローカル Docker 環境
+- **Remote WebDriver**: スケーラブルな分離アーキテクチャ
+- **ARM64 (M1 Mac) 対応**: seleniarm イメージを使用
+- **色付きログ**: ANSI色とアイコンによる美しいログ出力
+- **モジュラー設計**: 保守性の高いコード構造
+- **定数管理**: 一元的な設定値管理
+- **汎用的なスクレイパークラス**: 再利用可能な WebDriver 管理
 
-- **🐍 Python 3.12+** with type hints and modern syntax
-- **⚡ uv** for lightning-fast dependency management  
-- **🦀 Ruff** for blazing-fast linting and formatting
-- **🐳 Lightweight Docker** builds (no browser installations needed)
-- **🌐 Selenium Standalone** with official Chromium Docker images
-- **🚂 Railway** deployment ready with proper configuration
-- **🧪 Pytest** for comprehensive testing
-- **📝 Makefile** for npm-style development commands
-- **🎨 Beautiful colored logging** with icons and formatting
-- **🏗️ Clean modular architecture** with separation of concerns
-
-## 🌐 Why Selenium Standalone?
-
-Traditional approaches require heavy browser installations in your application container. With **Selenium Standalone Chromium**:
-
-- ✅ **Official Support**: SeleniumHQ maintained Docker images  
-- ✅ **Lightweight Apps**: Your app container has no browser dependencies
-- ✅ **ARM64 Compatible**: Uses `seleniarm/standalone-chromium` for M1 Macs
-- ✅ **Visual Debugging**: VNC access to see browser actions live
-- ✅ **Free & Local**: No external service dependencies
-- ✅ **Production Ready**: Remote WebDriver architecture
-- ✅ **Easy Management**: Single container setup
-
-## 🏗️ Project Structure
+## 📁 プロジェクト構造
 
 ```
 src/
-├── main.py              # 🎯 Clean entry point
-├── scraper.py           # 🕷️ Scraping logic with context manager
-└── utils/
-    ├── __init__.py
-    └── logger.py         # 🎨 Beautiful colored logging
+├── main.py              # メインエントリーポイント
+├── scraper.py           # WebDriver管理クラスとスクレイピング関数
+├── constants.py         # 定数管理（設定値、メッセージ等）
+├── utils/
+│   └── logger.py        # 色付きロガー
+├── __init__.py
+tests/
+└── test_main.py         # テストファイル
+docker-compose.yml       # Selenium Standalone構成
+Dockerfile               # アプリケーションコンテナ
+Makefile                 # 便利なコマンド集
 ```
 
-### Key Components
+## 🎯 設計思想
 
-- **`StandaloneChromiumScraper`**: Type-safe scraper class with context manager support
-- **`ColoredFormatter`**: Beautiful console output with colors and icons
-- **Environment-based config**: Easy deployment and testing
+### クラス設計の分離
+- **`StandaloneChromiumScraper`**: WebDriverの管理に特化した汎用クラス
+  - 接続・切断の管理
+  - 基本的なWebDriver操作（`get_page`, `find_element`, `take_screenshot`など）
+  - Context Managerによる安全なリソース管理
 
-## 🚀 Quick Start
+- **外部関数**: 特定の業務ロジック
+  - `scrape_test_page()`: テストページ固有のスクレイピングロジック
+  - クラスとビジネスロジックの責任分離
 
-### 1. Clone and Setup
+### 定数管理
+- **`constants.py`**: 全ての設定値を一箇所で管理
+  - Selenium設定（URL、ブラウザ、タイムアウト）
+  - ブラウザオプション（ウィンドウサイズ、User-Agent）
+  - ログ設定（色、アイコン、ANSI制御コード）
+  - メッセージテンプレート（エラー、成功メッセージ）
 
-```bash
-# Clone the repository  
-git clone https://github.com/your-username/your-project-name.git
-cd your-project-name
+## 🛠️ 使用方法
 
-# Install dependencies
-uv sync
+### 基本使用例
+
+```python
+from scraper import StandaloneChromiumScraper, scrape_test_page
+
+# 汎用的なWebDriver管理
+with StandaloneChromiumScraper() as scraper:
+    # ページ取得
+    scraper.get_page("https://example.com")
+    
+    # 要素検索
+    element = scraper.find_element(By.TAG_NAME, "h1")
+    
+    # ページ情報取得
+    page_info = scraper.get_page_info()
+    
+    # スクリーンショット
+    scraper.take_screenshot("example.png")
+
+# 特定の業務ロジック
+with StandaloneChromiumScraper() as scraper:
+    result = scrape_test_page(scraper)
+    print(result)
 ```
 
-### 2. Start Selenium Standalone
+### Docker での実行
 
 ```bash
-# Start the full stack with docker-compose
-make docker-up
-
-# Or manually:
-docker-compose up -d
-
-# Check status
-make grid-status
-```
-
-### 3. Run Scraping (One Command!)
-
-```bash
-# Run scraping with logs in one command
+# スクレイピング実行（Selenium起動 + アプリ実行 + ログ表示）
 make scrape
 
-# This will:
-# 1. Start Selenium Standalone if not running
-# 2. Build and run your Python app
-# 3. Stream logs in real-time
-# 4. Show beautiful colored output
+# Selenium Standalone のみ起動
+make start-selenium
+
+# ログ表示
+make logs
 ```
 
-## 🎨 Beautiful Logging Output
-
-The new colored logger provides gorgeous console output:
-
-```
-2025-01-23 10:30:15 ✅ INFO Connecting to Selenium Standalone Chrome...
-2025-01-23 10:30:16 ✅ INFO Connected successfully! Browser: chrome 131.0
-2025-01-23 10:30:17 ✅ INFO Navigating to test page...
-2025-01-23 10:30:18 ✅ INFO Test page scraped successfully  
-2025-01-23 10:30:19 ✅ INFO Screenshot saved: reports/test_screenshot_20250123_103019.png
-2025-01-23 10:30:20 ✅ INFO Remote WebDriver disconnected
-```
-
-## 🛠️ Development Commands
+### ローカル開発
 
 ```bash
-# 🧪 Testing
-make test                    # Run all tests
-make test-watch             # Run tests in watch mode
+# 依存関係インストール
+uv sync
 
-# 🦀 Code Quality  
-make lint                   # Run linting
-make format                 # Format code
-
-# 🐳 Docker Management
-make docker-up              # Start full stack
-make docker-down            # Stop all containers
-make docker-logs            # View all logs
-
-# 🕷️ Selenium Operations
-make grid-up                # Start Selenium Standalone
-make grid-down              # Stop Selenium
-make grid-status            # Check status
-make grid-logs              # View Selenium logs
-
-# 🚀 Scraping
-make scrape                 # Run scraping with logs (recommended!)
-make scrape-build           # Force rebuild and run  
-make scrape-logs            # View app logs only
+# Python実行
+python -m src.main
 ```
 
-## 🔧 Configuration
+## ⚙️ 設定
 
-### Environment Variables
+### 環境変数
 
 ```bash
-# Selenium configuration
-SELENIUM_REMOTE_URL=http://selenium:4444    # Selenium server URL
-SELENIUM_BROWSER=chrome                     # Browser type (chrome/firefox)
+SELENIUM_BROWSER=chrome          # chrome または firefox
+SELENIUM_REMOTE_URL=http://selenium:4444  # Docker環境
+# SELENIUM_REMOTE_URL=http://localhost:4444  # ローカル環境
 ```
 
-### Docker Compose Services
+### ブラウザオプション
 
-- **`selenium`**: Standalone Chromium container
-  - Port 4444: WebDriver API
-  - Port 7900: VNC viewer (password: `secret`)
-- **`python-app`**: Your application container
-
-## 🖥️ Visual Debugging
-
-Watch your scraper in action with VNC:
-
-1. **Start the stack**: `make docker-up`
-2. **Open VNC viewer**: http://localhost:7900
-3. **Password**: `secret`
-4. **Run scraping**: `make scrape`
-5. **Watch live**: See browser actions in real-time!
-
-## 🧪 Testing
-
-The project includes comprehensive tests for all components:
-
-```bash
-# Run all tests
-make test
-
-# Run specific test categories
-uv run python -m pytest tests/test_main.py -v        # Main module tests
-uv run python -m pytest tests/ -k "logger" -v       # Logger tests  
-uv run python -m pytest tests/ -k "scraper" -v      # Scraper tests
-```
-
-## 📦 Usage Examples
-
-### Basic Scraping
+`src/constants.py` で設定をカスタマイズ:
 
 ```python
-from src.scraper import create_scraper_from_env
+# Chrome設定
+CHROME_WINDOW_SIZE = "1920,1080"
+CHROME_USER_AGENT = "Mozilla/5.0 ..."
 
-# Using context manager (recommended)
-with create_scraper_from_env() as scraper:
-    result = scraper.scrape_test_page()
-    screenshot = scraper.take_screenshot("my_screenshot.png")
-    print(f"Title: {result['title']}")
+# Firefox設定  
+FIREFOX_WINDOW_WIDTH = "1920"
+FIREFOX_WINDOW_HEIGHT = "1080"
+
+# タイムアウト
+DEFAULT_TIMEOUT = 10  # 秒
 ```
 
-### Custom Scraper
+## 🔧 カスタマイズ
+
+### 新しいスクレイピング関数の追加
 
 ```python
-from src.scraper import StandaloneChromiumScraper
-
-# Custom configuration
-scraper = StandaloneChromiumScraper(
-    browser="chrome",
-    remote_url="http://localhost:4444",
-    timeout=30
-)
-
-scraper.connect()
-try:
-    result = scraper.scrape_test_page()
-finally:
-    scraper.disconnect()
+def scrape_custom_site(scraper: StandaloneChromiumScraper) -> dict:
+    """カスタムサイトのスクレイピング"""
+    scraper.get_page("https://custom-site.com")
+    scraper.wait_for_element(By.CLASS_NAME, "content")
+    
+    # 業務ロジック
+    data = {}
+    elements = scraper.find_elements(By.CSS_SELECTOR, ".item")
+    for element in elements:
+        data[element.get_attribute("id")] = element.text
+    
+    return data
 ```
 
-### Colored Logging
+### 定数の追加
 
 ```python
-from src.utils.logger import get_app_logger
-
-logger = get_app_logger(__name__)
-
-logger.info("✅ This will be green with an icon!")
-logger.warning("⚠️ This will be yellow with an icon!")  
-logger.error("❌ This will be red with an icon!")
+# constants.py に追加
+CUSTOM_SITE_URL = "https://custom-site.com"
+CUSTOM_TIMEOUT = 15
+CUSTOM_ERROR_MSG = "Custom site scraping failed: {}"
 ```
 
-## 🚂 Railway Deployment
+## 📊 ログ出力
 
-### 1. Prepare for Deploy
+色付きログで実行状況を視覚的に確認:
+
+```
+✅ 2025-01-23 12:23:51 - INFO - Connected successfully! Browser: chrome 124.0
+🕷️ 2025-01-23 12:23:51 - INFO - Navigating to: https://httpbin.org/html  
+📸 2025-01-23 12:23:54 - INFO - Screenshot saved: reports/test_screenshot.png
+✅ 2025-01-23 12:23:54 - INFO - Test completed successfully!
+```
+
+## 🧪 テスト
 
 ```bash
-# Ensure your code is committed
-git add .
-git commit -m "Ready for Railway deployment"
+# Docker内でテスト実行
+docker run --rm python-railway-template-python-app python -m pytest tests/ -v
+
+# ローカルでテスト実行
+uv run pytest tests/ -v
 ```
 
-### 2. Deploy Options
+## 🚢 Railway デプロイ
 
-**Option A: Use Railway Button**
-1. Click the Railway button above
-2. Connect your GitHub account
-3. Deploy automatically
+1. GitHub にプッシュ
+2. Railway でプロジェクト作成
+3. 環境変数設定:
+   ```
+   SELENIUM_REMOTE_URL=https://your-browserless-endpoint
+   SELENIUM_BROWSER=chrome
+   ```
 
-**Option B: Railway CLI**
-```bash
-# Install Railway CLI
-npm install -g @railway/cli
+## 🔍 トラブルシューティング
 
-# Login and deploy
-railway login
-railway init
-railway up
-```
+### よくある問題
 
-### 3. Environment Setup
+1. **接続エラー**: Selenium Standalone が起動しているか確認
+   ```bash
+   docker-compose up selenium-chrome
+   ```
 
-Set these environment variables in Railway:
+2. **ARM64 (M1 Mac) での問題**: `seleniarm` イメージを使用
+   ```yaml
+   # docker-compose.yml
+   image: seleniarm/standalone-chromium:latest
+   ```
 
-```
-SELENIUM_REMOTE_URL=http://selenium:4444
-SELENIUM_BROWSER=chrome
-```
+3. **要素が見つからない**: 適切な待機を追加
+   ```python
+   scraper.wait_for_element(By.ID, "target-element")
+   ```
 
-> **Note**: For Railway deployment, you might need to adjust the Selenium service configuration based on Railway's Docker support.
-
-## 🔍 Troubleshooting
-
-### Common Issues
-
-**1. Selenium not connecting**
-```bash
-# Check if containers are running
-docker ps
-
-# Check logs
-make grid-logs
-
-# Restart services
-make docker-down && make docker-up
-```
-
-**2. VNC not accessible**
-```bash
-# Check port mapping
-docker-compose ps
-
-# Ensure port 7900 is available
-lsof -i :7900
-```
-
-**3. ARM64 (M1 Mac) Issues**
-The project automatically uses `seleniarm/standalone-chromium` for ARM environments. If you encounter issues:
+### 設定確認
 
 ```bash
-# Force pull ARM image
-docker pull seleniarm/standalone-chromium:latest
+# Selenium Grid 状態確認
+curl http://localhost:4444/wd/hub/status
 
-# Clear Docker cache
-docker system prune -a
+# VNC で画面確認 
+open vnc://localhost:5900
 ```
 
-**4. Tests failing**
-```bash
-# Install test dependencies
-uv sync --dev
+## 📄 ライセンス
 
-# Run with verbose output
-make test
-```
+MIT License
 
-## 🎯 Next Steps
+## 🤝 貢献
 
-Ready to customize for your needs?
-
-1. **Add more scrapers**: Create new methods in `StandaloneChromiumScraper`
-2. **Custom logging**: Extend `ColoredFormatter` with your own styles
-3. **Database integration**: Add SQLAlchemy or other ORMs
-4. **API endpoints**: Add FastAPI for web service functionality
-5. **Scheduled jobs**: Add cron or background task processing
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
+1. Fork the project
+2. Create your feature branch
+3. Commit your changes  
+4. Push to the branch
 5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-**Happy Scraping!** 🕷️✨
-
-> Built with ❤️ using modern Python tooling and official Selenium Docker images.

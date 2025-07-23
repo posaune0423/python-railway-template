@@ -16,7 +16,7 @@ from constants import (
     SEPARATOR_LENGTH,
     VNC_URL,
 )
-from scraper import create_scraper_from_env
+from scraper import create_scraper_from_env, scrape_test_page
 from utils.logger import get_app_logger
 
 
@@ -47,8 +47,8 @@ def main() -> None:
         logger.info(f"Starting Selenium Standalone test with {browser}...")
 
         with create_scraper_from_env() as scraper:
-            # テストページスクレイピング
-            result = scraper.scrape_test_page()
+            # テストページスクレイピング（外部関数を使用）
+            result = scrape_test_page(scraper)
 
             # スクリーンショット保存
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

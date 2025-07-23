@@ -18,7 +18,7 @@ from src.constants import (
     TEST_URL,
 )
 from src.main import main, print_banner
-from src.scraper import StandaloneChromiumScraper, create_scraper_from_env
+from src.scraper import StandaloneChromiumScraper, create_scraper_from_env, scrape_test_page
 from src.utils.logger import ColoredFormatter, get_app_logger
 
 
@@ -100,31 +100,38 @@ class TestScraper(unittest.TestCase):
             scraper.connect()
 
     @patch("src.scraper.webdriver.Remote")
-    def test_scraper_scrape_test_page(self, mock_remote):
-        """Test scraping functionality using constant TEST_URL"""
+    def test_scraper_get_page(self, mock_remote):
+        """Test get_page functionality"""
         mock_driver = MagicMock()
-        mock_driver.title = "Test Page"
-        mock_driver.page_source = "<html><body>Test content</body></html>"
-        mock_driver.current_url = TEST_URL
-        mock_driver.capabilities = {"browserName": "chrome", "browserVersion": "90.0"}
-
-        # Mock H1 element
-        mock_h1 = MagicMock()
-        mock_h1.text = "Herman Melville - Moby-Dick"
-        mock_driver.find_element.return_value = mock_h1
-
         mock_remote.return_value = mock_driver
 
         scraper = StandaloneChromiumScraper()
         scraper.connect()
 
-        result = scraper.scrape_test_page()
+        test_url = "https://example.com"
+        scraper.get_page(test_url)
 
-        assert result["status"] == "success"
-        assert result["title"] == "Test Page"
-        assert result["h1_text"] == "Herman Melville - Moby-Dick"
-        assert result["url"] == TEST_URL
-        mock_driver.get.assert_called_with(TEST_URL)
+        mock_driver.get.assert_called_once_with(test_url)
+
+    @patch("src.scraper.webdriver.Remote")
+    def test_scraper_get_page_info(self, mock_remote):
+        """Test get_page_info functionality"""
+        mock_driver = MagicMock()
+        mock_driver.title = "Test Page"
+        mock_driver.current_url = "https://example.com"
+        mock_driver.page_source = "<html><body>Test</body></html>"
+        mock_driver.capabilities = {"browserName": "chrome", "browserVersion": "90.0"}
+        mock_remote.return_value = mock_driver
+
+        scraper = StandaloneChromiumScraper()
+        scraper.connect()
+
+        page_info = scraper.get_page_info()
+
+        assert page_info["title"] == "Test Page"
+        assert page_info["current_url"] == "https://example.com"
+        assert page_info["browser_name"] == "chrome"
+        assert page_info["browser_version"] == "90.0"
 
     @patch("src.scraper.webdriver.Remote")
     @patch("src.scraper.os.makedirs")
@@ -161,6 +168,39 @@ class TestScraper(unittest.TestCase):
             assert scraper.remote_url == "http://test:4444"
 
 
+class TestScrapingFunction(unittest.TestCase):
+    """Test the external scraping function"""
+
+    @patch("src.scraper.webdriver.Remote")
+    def test_scrape_test_page_function(self, mock_remote):
+        """Test the external scrape_test_page function"""
+        mock_driver = MagicMock()
+        mock_driver.title = "Test Page"
+        mock_driver.page_source = "<html><body>Test content</body></html>"
+        mock_driver.current_url = TEST_URL
+        mock_driver.capabilities = {"browserName": "chrome", "browserVersion": "90.0"}
+
+        # Mock H1 element
+        mock_h1 = MagicMock()
+        mock_h1.text = "Herman Melville - Moby-Dick"
+        mock_driver.find_element.return_value = mock_h1
+
+        mock_remote.return_value = mock_driver
+
+        scraper = StandaloneChromiumScraper()
+        scraper.connect()
+
+        # Use the external function
+        result = scrape_test_page(scraper)
+
+        assert result["status"] == "success"
+        assert result["title"] == "Test Page"
+        assert result["h1_text"] == "Herman Melville - Moby-Dick"
+        assert result["url"] == TEST_URL
+        # Verify that scraper methods were called
+        mock_driver.get.assert_called_with(TEST_URL)
+
+
 class TestMain(unittest.TestCase):
     """Main application tests"""
 
@@ -173,16 +213,21 @@ class TestMain(unittest.TestCase):
         assert mock_logger.info.call_count >= 5
         mock_logger.info.assert_any_call("🚀 Python Railway Template - Selenium Standalone Chromium")
 
+    @patch("src.main.scrape_test_page")
     @patch("src.main.create_scraper_from_env")
     @patch("src.main.get_app_logger")
-    def test_main_success(self, mock_logger_func, mock_create_scraper):
+    def test_main_success(self, mock_logger_func, mock_create_scraper, mock_scrape_func):
         """Test successful main execution"""
         # Setup mocks
         mock_logger = MagicMock()
         mock_logger_func.return_value = mock_logger
 
         mock_scraper = MagicMock()
-        mock_scraper.scrape_test_page.return_value = {
+        mock_scraper.take_screenshot.return_value = "test_screenshot.png"
+        mock_create_scraper.return_value.__enter__.return_value = mock_scraper
+
+        # Mock the external scraping function
+        mock_scrape_func.return_value = {
             "status": "success",
             "title": "Test",
             "h1_text": "Test H1",
@@ -192,8 +237,6 @@ class TestMain(unittest.TestCase):
             "browser_version": "90.0",
             "execution_mode": "selenium_standalone_chromium",
         }
-        mock_scraper.take_screenshot.return_value = "test_screenshot.png"
-        mock_create_scraper.return_value.__enter__.return_value = mock_scraper
 
         # Mock environment variables
         test_env = {
@@ -207,8 +250,8 @@ class TestMain(unittest.TestCase):
             except SystemExit:
                 pass  # main() may call sys.exit on success
 
-        # Verify scraper was called
-        mock_scraper.scrape_test_page.assert_called_once()
+        # Verify functions were called
+        mock_scrape_func.assert_called_once_with(mock_scraper)
         mock_scraper.take_screenshot.assert_called_once()
 
     @patch("src.main.create_scraper_from_env")

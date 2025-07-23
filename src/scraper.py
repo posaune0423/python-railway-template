@@ -26,7 +26,6 @@ from constants import (
     ENV_SELENIUM_REMOTE_URL,
     FIREFOX_WINDOW_HEIGHT,
     FIREFOX_WINDOW_WIDTH,
-    SCRAPING_SUCCESS_MSG,
     SCREENSHOT_SAVED_MSG,
     SUPPORTED_BROWSERS,
     TEST_URL,
@@ -37,7 +36,7 @@ from utils.logger import get_app_logger
 
 
 class StandaloneChromiumScraper:
-    """Selenium Standalone Chromium を使用したスクレイパー"""
+    """Selenium Standalone Chromium を使用したWebDriver管理クラス"""
 
     def __init__(
         self, browser: str = DEFAULT_BROWSER, remote_url: str = DEFAULT_REMOTE_URL_LOCAL, timeout: int = DEFAULT_TIMEOUT
@@ -120,53 +119,52 @@ class StandaloneChromiumScraper:
         """Context manager exit"""
         self.disconnect()
 
-    def scrape_test_page(self) -> dict[str, str]:
-        """テストページをスクレイピング"""
+    def get_page(self, url: str) -> None:
+        """指定URLのページを取得"""
         if not self.driver:
             raise RuntimeError(WEBDRIVER_NOT_CONNECTED_MSG)
 
-        try:
-            self.logger.info("Navigating to test page...")
-            self.driver.get(TEST_URL)
+        self.logger.info(f"Navigating to: {url}")
+        self.driver.get(url)
 
-            # ページロード待機
-            WebDriverWait(self.driver, self.timeout).until(EC.presence_of_element_located((By.TAG_NAME, "h1")))
+    def wait_for_element(self, by: By, value: str, timeout: int = None) -> None:
+        """要素の出現を待機"""
+        if not self.driver:
+            raise RuntimeError(WEBDRIVER_NOT_CONNECTED_MSG)
 
-            # ページ情報取得
-            title = self.driver.title
-            page_source_length = len(self.driver.page_source)
-            current_url = self.driver.current_url
+        wait_timeout = timeout or self.timeout
+        WebDriverWait(self.driver, wait_timeout).until(EC.presence_of_element_located((by, value)))
 
-            # H1テキスト取得
-            try:
-                h1_element = self.driver.find_element(By.TAG_NAME, "h1")
-                h1_text = h1_element.text
-            except Exception:
-                h1_text = "N/A"
+    def find_element(self, by: By, value: str):
+        """要素を検索"""
+        if not self.driver:
+            raise RuntimeError(WEBDRIVER_NOT_CONNECTED_MSG)
 
-            # ブラウザ情報
-            browser_name = self.driver.capabilities.get("browserName", "unknown")
-            browser_version = self.driver.capabilities.get("browserVersion", "unknown")
+        return self.driver.find_element(by, value)
 
-            result = {
-                "status": "success",
-                "title": title,
-                "h1_text": h1_text,
-                "page_source_length": str(page_source_length),
-                "url": current_url,
-                "browser_name": browser_name,
-                "browser_version": browser_version,
-                "execution_mode": "selenium_standalone_chromium",
-            }
+    def find_elements(self, by: By, value: str):
+        """複数要素を検索"""
+        if not self.driver:
+            raise RuntimeError(WEBDRIVER_NOT_CONNECTED_MSG)
 
-            self.logger.info(SCRAPING_SUCCESS_MSG)
-            self.logger.debug(f"Scraping result: {result}")
+        return self.driver.find_elements(by, value)
 
-            return result
+    def get_page_info(self) -> dict[str, str]:
+        """現在のページの基本情報を取得"""
+        if not self.driver:
+            raise RuntimeError(WEBDRIVER_NOT_CONNECTED_MSG)
 
-        except Exception as e:
-            self.logger.error(f"Scraping failed: {e}")
-            raise
+        # ブラウザ情報
+        browser_name = self.driver.capabilities.get("browserName", "unknown")
+        browser_version = self.driver.capabilities.get("browserVersion", "unknown")
+
+        return {
+            "title": self.driver.title,
+            "current_url": self.driver.current_url,
+            "page_source_length": str(len(self.driver.page_source)),
+            "browser_name": browser_name,
+            "browser_version": browser_version,
+        }
 
     def take_screenshot(self, filename: str = "screenshot.png", directory: str = DEFAULT_SCREENSHOT_DIR) -> str:
         """スクリーンショットを保存"""
@@ -185,6 +183,49 @@ class StandaloneChromiumScraper:
         except Exception as e:
             self.logger.error(f"Failed to save screenshot: {e}")
             raise
+
+
+def scrape_test_page(scraper: StandaloneChromiumScraper) -> dict[str, str]:
+    """テストページをスクレイピング（クラス外関数）"""
+    logger = get_app_logger(__name__)
+
+    try:
+        # テストページに移動
+        scraper.get_page(TEST_URL)
+
+        # ページロード待機
+        scraper.wait_for_element(By.TAG_NAME, "h1")
+
+        # 基本ページ情報取得
+        page_info = scraper.get_page_info()
+
+        # H1テキスト取得
+        try:
+            h1_element = scraper.find_element(By.TAG_NAME, "h1")
+            h1_text = h1_element.text
+        except Exception:
+            h1_text = "N/A"
+
+        # 結果をまとめる
+        result = {
+            "status": "success",
+            "title": page_info["title"],
+            "h1_text": h1_text,
+            "page_source_length": page_info["page_source_length"],
+            "url": page_info["current_url"],
+            "browser_name": page_info["browser_name"],
+            "browser_version": page_info["browser_version"],
+            "execution_mode": "selenium_standalone_chromium",
+        }
+
+        logger.info("Test page scraped successfully")
+        logger.debug(f"Scraping result: {result}")
+
+        return result
+
+    except Exception as e:
+        logger.error(f"Scraping failed: {e}")
+        raise
 
 
 def create_scraper_from_env() -> StandaloneChromiumScraper:

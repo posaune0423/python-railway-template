@@ -1,35 +1,34 @@
-# Python Railway Template - Selenium Grid Docker build
-# Optimized for Railway deployment with Selenium Grid
+# Python Railway Template - uv optimized Docker build
+# Based on https://docs.astral.sh/uv/guides/integration/docker/
 
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
+FROM python:3.12-slim AS builder
 
-ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+# Change the working directory to the `app` directory
 WORKDIR /app
 
 # Copy dependency files
 COPY pyproject.toml uv.lock ./
 
 # Install dependencies
-RUN uv sync --frozen --no-install-project --no-dev
+RUN uv sync --no-install-project --no-dev
 
-# Copy source code
-COPY . .
+# Copy the project into the intermediate image
+COPY . /app
 
-# Install the project
-RUN uv sync --frozen --no-dev
+# Sync the project (non-editable install)
+RUN uv sync --no-editable --no-dev
 
 # Production stage
 FROM python:3.12-slim
 
-# Copy the virtual environment
+# Copy the environment, but not the source code
 COPY --from=builder --chown=app:app /app/.venv /app/.venv
 
 # Make sure scripts in .venv are usable
 ENV PATH="/app/.venv/bin:$PATH"
-
-# Copy application code
-COPY --from=builder --chown=app:app /app /app
 
 # Create non-root user
 RUN groupadd --gid 1000 app && useradd --uid 1000 --gid app --shell /bin/bash --create-home app
@@ -49,5 +48,5 @@ ENV PYTHONUNBUFFERED=1
 # Expose port (if needed for web apps)
 EXPOSE 8000
 
-# Run the application directly with Python
-CMD ["python", "-m", "src.main"]
+# Run the application using the entry point from pyproject.toml
+CMD ["app"]

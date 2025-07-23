@@ -176,25 +176,132 @@ uv run pytest tests/ -v
 
 ## 🚢 Railway デプロイ
 
-### 🕐 Cronで自動実行
-10分おきに自動実行するRailwayデプロイが可能です！
+### ⚠️ 重要: Railway は docker-compose をサポートしていません
+Railwayでは単一のDockerfileのみサポートされており、docker-composeでの複数サービス構成はできません。
+そのため、**ダッシュボードから手動でデプロイ**する必要があります。
 
-**📋 詳細手順**: [RAILWAY_DEPLOY.md](./RAILWAY_DEPLOY.md)
+### 📋 手動デプロイ手順（ダッシュボード）
 
-### 🚀 クイックデプロイ
-1. GitHub にプッシュ
-2. Railway でプロジェクト作成
-3. 環境変数設定:
+#### 1. 🚀 プロジェクト作成
+1. [Railway Dashboard](https://railway.app/dashboard) にアクセス
+2. `+ New Project` または `⌘K` をクリック
+3. **`Empty project`** を選択（GitHub repoは後で設定）
+4. プロジェクト名を分かりやすい名前に変更
+   - Settings → Project Name → 例: `selenium-scraper`
+
+#### 2. 🔧 サービス作成
+1. `+ Create` ボタンから **`Empty service`** を作成
+2. サービス名を設定（右クリック → Rename）
+   - 例: `scraper-app` 
+3. `Deploy` ボタンまたは `⇧ Enter` でサービス作成
+
+#### 3. 📂 リポジトリ接続
+1. **Service Settings** を開く
+2. **Source** セクションで `Connect Repo` をクリック
+3. GitHub連携（初回のみ）後、対象リポジトリを選択
+4. **Branch**: `main` を選択
+5. **Root Directory**: 空欄のまま（プロジェクトルート）
+
+#### 4. ⚙️ 環境変数設定
+1. **Variables** タブを開く
+2. 以下の環境変数を追加:
+
+| Variable Name | Value | 説明 |
+|---------------|-------|------|
+| `SELENIUM_BROWSER` | `chrome` | ブラウザ指定 |
+| `SELENIUM_REMOTE_URL` | `http://localhost:4444` | ローカルSelenium（無視される） |
+
+**注意**: RailwayではSelenium Standaloneコンテナが使用できないため、
+ローカル開発用の設定値として記載しています。
+
+#### 5. 🚀 デプロイ実行
+1. **Deployments** タブで `Deploy` ボタンをクリック
+2. ビルドログを確認して正常終了を確認
+3. 初回デプロイには数分かかります
+
+#### 6. 🕐 Cron スケジュール設定
+1. **Settings** タブを開く  
+2. **Cron Schedule** セクションで設定:
    ```
-   SELENIUM_REMOTE_URL=wss://chrome.browserless.io/
-   SELENIUM_BROWSER=chrome
+   */10 * * * *
    ```
-4. Cron設定: `*/10 * * * *` (already configured in `railway.toml`)
+   （10分間隔で実行）
+3. **Restart Policy**: `NEVER` を選択
+   - 一度実行完了後は次のCron実行まで停止
 
-### 💰 コスト概算
-- **Railway**: $5/月 (Starter Plan)
-- **Browserless.io**: $29/月 (10分間隔で月4,320回実行)
-- **合計**: 約 $34/月
+### 🔧 railway.toml 設定ファイル
+
+プロジェクトルートに `railway.toml` を作成して設定を管理:
+
+```toml
+[build]
+builder = "dockerfile"
+
+[deploy]
+startCommand = "app"  # pyproject.tomlで定義されたエントリーポイント
+restartPolicyType = "NEVER"  # Cronジョブとして実行
+
+[[services]]
+[services.app]
+source = "/"
+
+# Cron設定（10分間隔）
+[services.app.cron]
+schedule = "*/10 * * * *"
+```
+
+### 📊 デプロイ確認
+
+#### ✅ 成功確認項目
+1. **Build Success**: Dockerfileビルドが正常完了
+2. **Environment Detection**: ログで `Environment: railway` 表示
+3. **Cron Execution**: 指定時間に自動実行される
+4. **Exit Code 0**: スクレイピング処理が正常終了
+
+#### 🔍 デバッグ方法
+1. **Deployments** タブでログ確認
+2. **Metrics** でリソース使用状況確認  
+3. **Settings** → **Variables** で環境変数確認
+
+### 🚨 よくある問題と解決方法
+
+#### 1. `uv: command not found`
+- **原因**: Dockerfileでuv実行が失敗
+- **解決**: `CMD ["app"]` でPythonスクリプト直接実行
+
+#### 2. `selenium module not found`  
+- **原因**: 依存関係インストール失敗
+- **解決**: `uv sync --frozen` でロックファイル通りにインストール
+
+#### 3. Selenium接続エラー
+- **原因**: RailwayでSelenium Standaloneが利用不可
+- **現状**: このテンプレートは**ローカル開発専用**
+- **対応**: 外部Seleniumサービス（Browserless等）への移行が必要
+
+### 💡 運用のコツ
+
+#### Cron ジョブ監視
+```bash
+# Railway CLIでログ確認
+railway logs --follow
+
+# 特定デプロイメントのログ確認  
+railway logs <deployment-id>
+```
+
+#### 本番環境での考慮事項
+1. **スケーリング**: Cronジョブは基本的にシングルインスタンス
+2. **エラーハンドリング**: 失敗時の通知設定を検討
+3. **ログ保持**: Railway無料プランはログ保持期間制限あり
+4. **コスト管理**: 実行頻度とリソース使用量の最適化
+
+### 🔄 アップデート手順
+1. GitHubにコード変更をプッシュ
+2. Railwayで自動的に新しいデプロイメントが開始
+3. **Deployments** タブで進行状況確認
+4. 次回Cron実行で新バージョンが動作
+
+**👆 このようにRailwayでは docker-compose は使えないため、ダッシュボードでの手動設定が必要です！**
 
 ## 🔍 トラブルシューティング
 

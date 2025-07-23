@@ -1,8 +1,0 @@
-[build]
-builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
-
-[deploy]
-restartPolicyType = "NEVER"
-sleepApplication = false
-cronSchedule = "*/10 * * * *"

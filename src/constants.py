@@ -14,6 +14,7 @@ import logging
 DEFAULT_BROWSER = "chrome"
 DEFAULT_REMOTE_URL_DOCKER = "http://selenium:4444"  # Docker環境用
 DEFAULT_REMOTE_URL_LOCAL = "http://localhost:4444"  # ローカル環境用
+DEFAULT_REMOTE_URL_BROWSERLESS = "wss://chrome.browserless.io"  # Browserless.io用
 DEFAULT_TIMEOUT = 10  # 秒
 
 # サポートブラウザ
@@ -21,6 +22,14 @@ SUPPORTED_BROWSERS = ["chrome", "firefox"]
 
 # テスト用URL
 TEST_URL = "https://httpbin.org/html"
+
+# ========================================
+# Environment Detection
+# ========================================
+
+# Railway環境検出用
+RAILWAY_ENVIRONMENT = "RAILWAY_ENVIRONMENT"
+RAILWAY_PROJECT_ID = "RAILWAY_PROJECT_ID"
 
 # ========================================
 # Browser Options
@@ -80,7 +89,7 @@ ANSI_GRAY = "\033[90m"
 # Application Messages
 # ========================================
 
-APP_TITLE = "🚀 Python Railway Template - Selenium Standalone Chromium"
+APP_TITLE = "🚀 Python Railway Template - Selenium Remote WebDriver"
 BANNER_LENGTH = 60
 SEPARATOR_LENGTH = 60
 
@@ -100,3 +109,4 @@ SCREENSHOT_SAVED_MSG = "Screenshot saved: {}"
 
 ENV_SELENIUM_BROWSER = "SELENIUM_BROWSER"
 ENV_SELENIUM_REMOTE_URL = "SELENIUM_REMOTE_URL"
+ENV_BROWSERLESS_TOKEN = "BROWSERLESS_TOKEN"  # Browserless.io APIトークン

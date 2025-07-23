@@ -36,9 +36,21 @@ def main() -> None:
     logger = get_app_logger(__name__)
 
     try:
-        # 環境変数取得
+        # 環境変数取得と環境検出
         browser = os.getenv("SELENIUM_BROWSER", DEFAULT_BROWSER)
-        remote_url = os.getenv("SELENIUM_REMOTE_URL", DEFAULT_REMOTE_URL_DOCKER)
+
+        # 環境に応じたデフォルトURL選択
+        if os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_PROJECT_ID"):
+            default_url = "wss://chrome.browserless.io"  # Railway環境
+            logger.info("🚂 Running on Railway - Using external browser service")
+        elif os.getenv("DOCKER_CONTAINER"):
+            default_url = DEFAULT_REMOTE_URL_DOCKER  # Docker環境
+            logger.info("🐳 Running in Docker - Using Selenium Standalone")
+        else:
+            default_url = "http://localhost:4444"  # ローカル環境
+            logger.info("💻 Running locally - Using localhost Selenium")
+
+        remote_url = os.getenv("SELENIUM_REMOTE_URL", default_url)
 
         # バナー表示
         print_banner(logger, browser, remote_url)

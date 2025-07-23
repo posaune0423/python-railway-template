@@ -176,13 +176,25 @@ uv run pytest tests/ -v
 
 ## 🚢 Railway デプロイ
 
+### 🕐 Cronで自動実行
+10分おきに自動実行するRailwayデプロイが可能です！
+
+**📋 詳細手順**: [RAILWAY_DEPLOY.md](./RAILWAY_DEPLOY.md)
+
+### 🚀 クイックデプロイ
 1. GitHub にプッシュ
 2. Railway でプロジェクト作成
 3. 環境変数設定:
    ```
-   SELENIUM_REMOTE_URL=https://your-browserless-endpoint
+   SELENIUM_REMOTE_URL=wss://chrome.browserless.io/
    SELENIUM_BROWSER=chrome
    ```
+4. Cron設定: `*/10 * * * *` (already configured in `railway.toml`)
+
+### 💰 コスト概算
+- **Railway**: $5/月 (Starter Plan)
+- **Browserless.io**: $29/月 (10分間隔で月4,320回実行)
+- **合計**: 約 $34/月
 
 ## 🔍 トラブルシューティング
 

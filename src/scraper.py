@@ -19,6 +19,8 @@ from constants import (
     CONNECTION_FAILED_MSG,
     CONNECTION_SUCCESS_MSG,
     DEFAULT_BROWSER,
+    DEFAULT_REMOTE_URL_BROWSERLESS,
+    DEFAULT_REMOTE_URL_DOCKER,
     DEFAULT_REMOTE_URL_LOCAL,
     DEFAULT_SCREENSHOT_DIR,
     DEFAULT_TIMEOUT,
@@ -26,6 +28,8 @@ from constants import (
     ENV_SELENIUM_REMOTE_URL,
     FIREFOX_WINDOW_HEIGHT,
     FIREFOX_WINDOW_WIDTH,
+    RAILWAY_ENVIRONMENT,
+    RAILWAY_PROJECT_ID,
     SCREENSHOT_SAVED_MSG,
     SUPPORTED_BROWSERS,
     TEST_URL,
@@ -231,6 +235,18 @@ def scrape_test_page(scraper: StandaloneChromiumScraper) -> dict[str, str]:
 def create_scraper_from_env() -> StandaloneChromiumScraper:
     """環境変数からスクレイパーを作成"""
     browser = os.getenv(ENV_SELENIUM_BROWSER, DEFAULT_BROWSER)
-    remote_url = os.getenv(ENV_SELENIUM_REMOTE_URL, DEFAULT_REMOTE_URL_LOCAL)
+
+    # Railway環境の検出と適切なデフォルトURL選択
+    if os.getenv(RAILWAY_ENVIRONMENT) or os.getenv(RAILWAY_PROJECT_ID):
+        # Railway環境: Browserless.ioまたは外部サービスを使用
+        default_url = DEFAULT_REMOTE_URL_BROWSERLESS
+    elif os.getenv("DOCKER_CONTAINER"):
+        # Docker環境: selenium サービスを使用
+        default_url = DEFAULT_REMOTE_URL_DOCKER
+    else:
+        # ローカル環境: localhost を使用
+        default_url = DEFAULT_REMOTE_URL_LOCAL
+
+    remote_url = os.getenv(ENV_SELENIUM_REMOTE_URL, default_url)
 
     return StandaloneChromiumScraper(browser=browser, remote_url=remote_url)

@@ -3,5 +3,6 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-restartPolicyType = "ON_FAILURE"
+restartPolicyType = "NEVER"
 sleepApplication = false
+cronSchedule = "*/10 * * * *"

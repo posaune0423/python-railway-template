@@ -24,8 +24,15 @@ RUN uv sync --no-editable --no-dev
 # Production stage
 FROM python:3.12-slim
 
-# Copy the environment, but not the source code
+# Install uv in production stage
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Copy the environment and source code
 COPY --from=builder --chown=app:app /app/.venv /app/.venv
+COPY --from=builder --chown=app:app /app/src /app/src
+COPY --from=builder --chown=app:app /app/pyproject.toml /app/pyproject.toml
+COPY --from=builder --chown=app:app /app/uv.lock /app/uv.lock
+COPY --from=builder --chown=app:app /app/README.md /app/README.md
 
 # Make sure scripts in .venv are usable
 ENV PATH="/app/.venv/bin:$PATH"
@@ -49,4 +56,4 @@ ENV PYTHONUNBUFFERED=1
 EXPOSE 8000
 
 # Run the application using the entry point from pyproject.toml
-CMD ["app"]
+CMD ["python", "-m", "src.main"]

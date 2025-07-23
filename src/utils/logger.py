@@ -7,7 +7,7 @@ Colored Logger Utility for Python Railway Template
 import logging
 import sys
 
-from constants import (
+from ..constants import (
     ANSI_BOLD,
     ANSI_GRAY,
     ANSI_RESET,

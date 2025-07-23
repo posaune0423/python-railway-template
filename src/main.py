@@ -8,7 +8,7 @@ import os
 import sys
 from datetime import datetime
 
-from constants import (
+from .constants import (
     APP_TITLE,
     BANNER_LENGTH,
     DEFAULT_BROWSER,
@@ -16,8 +16,8 @@ from constants import (
     SEPARATOR_LENGTH,
     VNC_URL,
 )
-from scraper import create_scraper_from_env, scrape_test_page
-from utils.logger import get_app_logger
+from .scraper import create_scraper_from_env, scrape_test_page
+from .utils.logger import get_app_logger
 
 
 def print_banner(logger, browser: str, remote_url: str) -> None:

@@ -1,3 +1,6 @@
+# ローカル開発専用 Docker Compose 構成
+# Railway本番環境では使用できません
+
 services:
   # Selenium standalone for ARM (M1 Mac compatible)
   selenium:
@@ -13,10 +16,10 @@ services:
     environment:
       - VNC_NO_PASSWORD=1  # VNCパスワードを無効化（オプション）
 
-  # Python Application
-  python-app:
+  # Selenium Scraper Application (ローカル開発専用)
+  selenium-scraper:
     build: .
-    container_name: python-selenium-app
+    container_name: selenium-scraper-app
     depends_on:
       - selenium
     environment:
@@ -26,8 +29,8 @@ services:
       - default
     volumes:
       - ./reports:/app/reports  # For screenshots and outputs
-      - ./src:/app/src  # Mount source for development
-    command: ["python", "src/main.py"]
+      # - ./src:/app/src  # Mount source for development (disabled for now)
+    command: ["python", "-m", "src.main"]
     # ログ出力設定
     logging:
       driver: "json-file"

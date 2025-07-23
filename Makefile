@@ -42,7 +42,10 @@ help:
 	@echo "  railway-deploy Deploy to Railway"
 	@echo ""
 	@echo "🧹 Cleanup:"
-	@echo "  clean         Clean cache files"
+	@echo "  clean         Clean Python cache + Docker resources"
+	@echo "  clean-python  Clean Python cache files only"
+	@echo "  clean-docker  Clean Docker containers/images only"
+	@echo "  clean-all     🔥 Deep clean ALL Docker resources (WARNING)"
 
 # Development setup
 .PHONY: install
@@ -122,12 +125,12 @@ scrape:
 	@echo "⏳ Waiting for Grid to be ready..."
 	@sleep 5
 	@echo "🚀 Running scraping application..."
-	@docker-compose up --build python-app
+	@docker-compose up --build selenium-scraper
 
 .PHONY: scrape-logs
 scrape-logs:
 	@echo "📋 Showing scraping logs..."
-	@docker-compose logs -f python-app
+	@docker-compose logs -f selenium-scraper
 
 .PHONY: scrape-build
 scrape-build:
@@ -135,7 +138,7 @@ scrape-build:
 	@docker-compose up -d selenium
 	@echo "⏳ Waiting for Grid to be ready..."
 	@sleep 5
-	@docker-compose up --build --force-recreate python-app
+	@docker-compose up --build --force-recreate selenium-scraper
 
 .PHONY: logs
 logs:
@@ -169,8 +172,39 @@ railway-deploy:
 
 # Cleanup
 .PHONY: clean
-clean:
-	find . -type d -name "__pycache__" -delete
-	find . -type f -name "*.pyc" -delete
-	find . -type d -name ".pytest_cache" -delete
-	find . -type d -name ".ruff_cache" -delete
+clean: clean-python clean-docker
+	@echo "🧹 Complete cleanup finished!"
+
+.PHONY: clean-python
+clean-python:
+	@echo "🐍 Cleaning Python cache files..."
+	@find . -type d -name "__pycache__" -delete 2>/dev/null || true
+	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	@find . -type d -name ".pytest_cache" -delete 2>/dev/null || true
+	@find . -type d -name ".ruff_cache" -delete 2>/dev/null || true
+	@rm -rf .coverage htmlcov/ 2>/dev/null || true
+	@echo "✅ Python cleanup completed"
+
+.PHONY: clean-docker
+clean-docker:
+	@echo "🐳 Cleaning Docker resources..."
+	@echo "  📦 Stopping and removing containers..."
+	@docker-compose down --remove-orphans 2>/dev/null || true
+	@docker stop selenium-chrome selenium-scraper-app 2>/dev/null || true
+	@docker rm selenium-chrome selenium-scraper-app 2>/dev/null || true
+	@echo "  🖼️  Removing project images..."
+	@docker rmi python-railway-template-selenium-scraper 2>/dev/null || true
+	@docker rmi selenium-scraper 2>/dev/null || true
+	@echo "  🗂️  Removing dangling images and build cache..."
+	@docker image prune -f 2>/dev/null || true
+	@docker builder prune -f 2>/dev/null || true
+	@echo "  🔗 Cleaning unused networks..."
+	@docker network prune -f 2>/dev/null || true
+	@echo "✅ Docker cleanup completed"
+
+.PHONY: clean-all
+clean-all: clean
+	@echo "🔥 Performing deep Docker cleanup..."
+	@echo "  ⚠️  This will remove ALL unused Docker resources"
+	@docker system prune -af --volumes 2>/dev/null || true
+	@echo "🧹 Deep cleanup completed!"

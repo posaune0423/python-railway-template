@@ -13,7 +13,7 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from constants import (
+from .constants import (
     CHROME_USER_AGENT,
     CHROME_WINDOW_SIZE,
     CONNECTION_FAILED_MSG,
@@ -36,7 +36,7 @@ from constants import (
     UNSUPPORTED_BROWSER_MSG,
     WEBDRIVER_NOT_CONNECTED_MSG,
 )
-from utils.logger import get_app_logger
+from .utils.logger import get_app_logger
 
 
 class StandaloneChromiumScraper:

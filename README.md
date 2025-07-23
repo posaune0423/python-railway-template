@@ -24,8 +24,9 @@ src/
 ├── __init__.py
 tests/
 └── test_main.py         # テストファイル
-docker-compose.yml       # Selenium Standalone構成
-Dockerfile               # アプリケーションコンテナ
+docker-compose.yaml      # ローカル開発専用 Selenium Standalone構成
+Dockerfile               # Railway本番デプロイ用コンテナ
+railway.toml             # Railway設定ファイル（Cron等）
 Makefile                 # 便利なコマンド集
 ```
 
@@ -75,7 +76,9 @@ with StandaloneChromiumScraper() as scraper:
     print(result)
 ```
 
-### Docker での実行
+### Docker での実行（ローカル開発専用）
+
+**⚠️ 注意**: `docker-compose` はローカル開発専用です。Railway本番環境では使用できません。
 
 ```bash
 # スクレイピング実行（Selenium起動 + アプリ実行 + ログ表示）
@@ -86,6 +89,10 @@ make start-selenium
 
 # ログ表示
 make logs
+
+# 環境クリーンアップ
+make clean       # Python + Docker リソース削除
+make clean-all   # 全Docker リソース完全削除（注意）
 ```
 
 ### ローカル開発
@@ -168,7 +175,7 @@ CUSTOM_ERROR_MSG = "Custom site scraping failed: {}"
 
 ```bash
 # Docker内でテスト実行
-docker run --rm python-railway-template-python-app python -m pytest tests/ -v
+docker run --rm python-railway-template-selenium-scraper python -m pytest tests/ -v
 
 # ローカルでテスト実行
 uv run pytest tests/ -v
@@ -178,6 +185,7 @@ uv run pytest tests/ -v
 
 ### ⚠️ 重要: Railway は docker-compose をサポートしていません
 Railwayでは単一のDockerfileのみサポートされており、docker-composeでの複数サービス構成はできません。
+**docker-compose.yaml はローカル開発専用**で、Railway本番環境では使用できません。
 そのため、**ダッシュボードから手動でデプロイ**する必要があります。
 
 ### 📋 手動デプロイ手順（ダッシュボード）
@@ -321,6 +329,17 @@ railway logs <deployment-id>
 3. **要素が見つからない**: 適切な待機を追加
    ```python
    scraper.wait_for_element(By.ID, "target-element")
+   ```
+
+4. **Docker ビルドエラー**: キャッシュクリアで解決
+   ```bash
+   make clean        # プロジェクト関連削除
+   make clean-all    # 全Docker リソース削除（注意）
+   ```
+
+5. **ポート競合エラー**: 既存コンテナの停止
+   ```bash
+   make clean-docker  # Dockerリソースのみ削除
    ```
 
 ### 設定確認

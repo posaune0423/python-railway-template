@@ -1,39 +1,57 @@
-# 🚀 Python Railway Template with Selenium Grid
+# 🚀 Python Railway Template with Selenium Standalone Chromium
 
-Modern Python template for Railway deployment with **official Selenium Grid** Docker containers. No external services needed - everything runs locally with Docker Compose!
+Modern Python template for Railway deployment with **Selenium Standalone Chromium** using official Docker images. Clean architecture with modular design and beautiful colored logging!
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/new)
 
 ## ✨ Features
 
 - **🐍 Python 3.12+** with type hints and modern syntax
-- **⚡ uv** for lightning-fast dependency management
+- **⚡ uv** for lightning-fast dependency management  
 - **🦀 Ruff** for blazing-fast linting and formatting
 - **🐳 Lightweight Docker** builds (no browser installations needed)
-- **🌐 Selenium Grid** with official Docker images
+- **🌐 Selenium Standalone** with official Chromium Docker images
 - **🚂 Railway** deployment ready with proper configuration
 - **🧪 Pytest** for comprehensive testing
 - **📝 Makefile** for npm-style development commands
-- **🔧 Example Selenium scraper** using Grid architecture
+- **🎨 Beautiful colored logging** with icons and formatting
+- **🏗️ Clean modular architecture** with separation of concerns
 
-## 🌐 Why Selenium Grid?
+## 🌐 Why Selenium Standalone?
 
-Traditional approaches require heavy browser installations in your application container. With **Selenium Grid**:
+Traditional approaches require heavy browser installations in your application container. With **Selenium Standalone Chromium**:
 
-- ✅ **Official Support**: SeleniumHQ maintained Docker images
+- ✅ **Official Support**: SeleniumHQ maintained Docker images  
 - ✅ **Lightweight Apps**: Your app container has no browser dependencies
-- ✅ **Multiple Browsers**: Chrome, Firefox, Edge support
-- ✅ **Scalable**: Easy horizontal scaling
-- ✅ **Visual Debugging**: VNC access to see browser actions
+- ✅ **ARM64 Compatible**: Uses `seleniarm/standalone-chromium` for M1 Macs
+- ✅ **Visual Debugging**: VNC access to see browser actions live
 - ✅ **Free & Local**: No external service dependencies
-- ✅ **Production Ready**: Used by enterprises worldwide
+- ✅ **Production Ready**: Remote WebDriver architecture
+- ✅ **Easy Management**: Single container setup
+
+## 🏗️ Project Structure
+
+```
+src/
+├── main.py              # 🎯 Clean entry point
+├── scraper.py           # 🕷️ Scraping logic with context manager
+└── utils/
+    ├── __init__.py
+    └── logger.py         # 🎨 Beautiful colored logging
+```
+
+### Key Components
+
+- **`StandaloneChromiumScraper`**: Type-safe scraper class with context manager support
+- **`ColoredFormatter`**: Beautiful console output with colors and icons
+- **Environment-based config**: Easy deployment and testing
 
 ## 🚀 Quick Start
 
 ### 1. Clone and Setup
 
 ```bash
-# Clone the repository
+# Clone the repository  
 git clone https://github.com/your-username/your-project-name.git
 cd your-project-name
 
@@ -41,334 +59,267 @@ cd your-project-name
 uv sync
 ```
 
-### 2. Start Selenium Grid
+### 2. Start Selenium Standalone
 
 ```bash
 # Start the full stack with docker-compose
+make docker-up
+
+# Or manually:
 docker-compose up -d
 
-# Check Grid status
-open http://localhost:4444
+# Check status
+make grid-status
 ```
 
-### 3. Run the Example
+### 3. Run Scraping (One Command!)
 
 ```bash
-# Run with Chrome (default)
-make run
+# Run scraping with logs in one command
+make scrape
 
-# Or specify Firefox
-SELENIUM_BROWSER=firefox make run
+# This will:
+# 1. Start Selenium Standalone if not running
+# 2. Build and run your Python app
+# 3. Stream logs in real-time
+# 4. Show beautiful colored output
 ```
 
-## 🛠️ Development Workflow
+## 🎨 Beautiful Logging Output
 
-### Option 1: Direct uv commands (Fastest)
-```bash
-uv run ruff format src/      # Format code
-uv run ruff check src/       # Lint code
-uv run ruff check --fix src/ # Auto-fix issues
-uv run python -m pytest     # Run tests
-uv run app                   # Run application
+The new colored logger provides gorgeous console output:
+
+```
+2025-01-23 10:30:15 ✅ INFO Connecting to Selenium Standalone Chrome...
+2025-01-23 10:30:16 ✅ INFO Connected successfully! Browser: chrome 131.0
+2025-01-23 10:30:17 ✅ INFO Navigating to test page...
+2025-01-23 10:30:18 ✅ INFO Test page scraped successfully  
+2025-01-23 10:30:19 ✅ INFO Screenshot saved: reports/test_screenshot_20250123_103019.png
+2025-01-23 10:30:20 ✅ INFO Remote WebDriver disconnected
 ```
 
-### Option 2: Makefile commands (npm-style)
-```bash
-make format      # Format code
-make lint        # Lint code  
-make lint-fix    # Auto-fix issues
-make test        # Run tests
-make run         # Run application
-make help        # Show all commands
-```
-
-## 🐳 Docker & Deployment
-
-### Local Development with Docker Compose
+## 🛠️ Development Commands
 
 ```bash
-# Start Selenium Grid and all services
-docker-compose up -d
+# 🧪 Testing
+make test                    # Run all tests
+make test-watch             # Run tests in watch mode
 
-# View logs
-docker-compose logs -f app
+# 🦀 Code Quality  
+make lint                   # Run linting
+make format                 # Format code
 
-# Stop all services
-docker-compose down
+# 🐳 Docker Management
+make docker-up              # Start full stack
+make docker-down            # Stop all containers
+make docker-logs            # View all logs
+
+# 🕷️ Selenium Operations
+make grid-up                # Start Selenium Standalone
+make grid-down              # Stop Selenium
+make grid-status            # Check status
+make grid-logs              # View Selenium logs
+
+# 🚀 Scraping
+make scrape                 # Run scraping with logs (recommended!)
+make scrape-build           # Force rebuild and run  
+make scrape-logs            # View app logs only
 ```
 
-### Grid Services Overview
+## 🔧 Configuration
 
-- **Selenium Hub**: `http://localhost:4444` - Grid console
-- **Chrome VNC**: `http://localhost:7900` - Watch Chrome browser
-- **Firefox VNC**: `http://localhost:7901` - Watch Firefox browser
-- **VNC Password**: `secret`
+### Environment Variables
 
-### Railway Deployment
+```bash
+# Selenium configuration
+SELENIUM_REMOTE_URL=http://selenium:4444    # Selenium server URL
+SELENIUM_BROWSER=chrome                     # Browser type (chrome/firefox)
+```
 
-#### Option 1: One-Click Deploy
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/new)
+### Docker Compose Services
 
-#### Option 2: Manual Deploy
+- **`selenium`**: Standalone Chromium container
+  - Port 4444: WebDriver API
+  - Port 7900: VNC viewer (password: `secret`)
+- **`python-app`**: Your application container
+
+## 🖥️ Visual Debugging
+
+Watch your scraper in action with VNC:
+
+1. **Start the stack**: `make docker-up`
+2. **Open VNC viewer**: http://localhost:7900
+3. **Password**: `secret`
+4. **Run scraping**: `make scrape`
+5. **Watch live**: See browser actions in real-time!
+
+## 🧪 Testing
+
+The project includes comprehensive tests for all components:
+
+```bash
+# Run all tests
+make test
+
+# Run specific test categories
+uv run python -m pytest tests/test_main.py -v        # Main module tests
+uv run python -m pytest tests/ -k "logger" -v       # Logger tests  
+uv run python -m pytest tests/ -k "scraper" -v      # Scraper tests
+```
+
+## 📦 Usage Examples
+
+### Basic Scraping
+
+```python
+from src.scraper import create_scraper_from_env
+
+# Using context manager (recommended)
+with create_scraper_from_env() as scraper:
+    result = scraper.scrape_test_page()
+    screenshot = scraper.take_screenshot("my_screenshot.png")
+    print(f"Title: {result['title']}")
+```
+
+### Custom Scraper
+
+```python
+from src.scraper import StandaloneChromiumScraper
+
+# Custom configuration
+scraper = StandaloneChromiumScraper(
+    browser="chrome",
+    remote_url="http://localhost:4444",
+    timeout=30
+)
+
+scraper.connect()
+try:
+    result = scraper.scrape_test_page()
+finally:
+    scraper.disconnect()
+```
+
+### Colored Logging
+
+```python
+from src.utils.logger import get_app_logger
+
+logger = get_app_logger(__name__)
+
+logger.info("✅ This will be green with an icon!")
+logger.warning("⚠️ This will be yellow with an icon!")  
+logger.error("❌ This will be red with an icon!")
+```
+
+## 🚂 Railway Deployment
+
+### 1. Prepare for Deploy
+
+```bash
+# Ensure your code is committed
+git add .
+git commit -m "Ready for Railway deployment"
+```
+
+### 2. Deploy Options
+
+**Option A: Use Railway Button**
+1. Click the Railway button above
+2. Connect your GitHub account
+3. Deploy automatically
+
+**Option B: Railway CLI**
 ```bash
 # Install Railway CLI
 npm install -g @railway/cli
 
 # Login and deploy
 railway login
+railway init
 railway up
 ```
 
-**Note**: For Railway deployment, you might want to use a managed Selenium service or deploy Grid separately.
+### 3. Environment Setup
 
-## ⚙️ Configuration
-
-### Environment Variables
-
-| Variable | Description | Default | Options |
-|----------|-------------|---------|---------|
-| `SELENIUM_HUB_URL` | Selenium Grid Hub URL | `http://localhost:4444` | Any Grid URL |
-| `SELENIUM_BROWSER` | Browser to use | `chrome` | `chrome`, `firefox` |
-
-### Docker Compose Configuration
-
-The `docker-compose.yml` includes:
-- **Selenium Hub**: Central coordination
-- **Chrome Node**: Chrome browser instances
-- **Firefox Node**: Firefox browser instances
-- **App Container**: Your Python application
-
-### Browser Options
-
-```bash
-# Use Chrome (default)
-SELENIUM_BROWSER=chrome make run
-
-# Use Firefox
-SELENIUM_BROWSER=firefox make run
-
-# Custom Grid URL
-SELENIUM_HUB_URL=http://remote-grid:4444 make run
-```
-
-## 📁 Project Structure
+Set these environment variables in Railway:
 
 ```
-python-railway-template/
-├── src/
-│   ├── __init__.py         # Package initialization
-│   └── main.py             # Selenium Grid logic
-├── tests/                  # Test files
-├── reports/                # Screenshots and outputs
-├── docker-compose.yml      # Selenium Grid setup
-├── Dockerfile              # Lightweight app container
-├── Makefile               # Development commands
-├── railway.toml           # Railway deployment config
-├── pyproject.toml         # Project configuration
-├── uv.lock               # Locked dependencies
-└── README.md             # This file
+SELENIUM_REMOTE_URL=http://selenium:4444
+SELENIUM_BROWSER=chrome
 ```
 
-## 🧪 Example Application
+> **Note**: For Railway deployment, you might need to adjust the Selenium service configuration based on Railway's Docker support.
 
-The template includes a **Selenium Grid scraper** that:
-- ✅ Connects to local Selenium Grid
-- ✅ Supports Chrome and Firefox browsers
-- ✅ Takes screenshots automatically
-- ✅ Provides VNC access for debugging
-- ✅ Handles errors gracefully
-- ✅ Scales with Grid nodes
-
-### Visual Debugging
-
-Watch your automation in real-time:
-
-1. **Start the grid**: `docker-compose up -d`
-2. **Open VNC viewer**: `http://localhost:7900` (Chrome) or `http://localhost:7901` (Firefox)
-3. **Password**: `secret`
-4. **Run your tests**: `make run`
-
-## 🎯 Selenium Code Example
-
-```python
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-import os
-
-def setup_grid_driver():
-    hub_url = os.getenv("SELENIUM_HUB_URL", "http://localhost:4444")
-    browser = os.getenv("SELENIUM_BROWSER", "chrome")
-    
-    if browser == "chrome":
-        options = ChromeOptions()
-        options.add_argument("--no-sandbox")
-        capabilities = options.to_capabilities()
-        capabilities['browserName'] = 'chrome'
-    
-    driver = webdriver.Remote(
-        command_executor=f"{hub_url}/wd/hub",
-        desired_capabilities=capabilities
-    )
-    
-    return driver
-
-# Usage
-driver = setup_grid_driver()
-driver.get("https://example.com")
-driver.save_screenshot("screenshot.png")
-driver.quit()
-```
-
-## 💰 Cost & Resource Comparison
-
-### Traditional Approach (Heavy containers)
-- **App Container**: 1.2GB (with Chrome/Firefox)
-- **Memory**: 512MB+ per container
-- **Complexity**: High maintenance
-- **Scaling**: Resource intensive
-
-### Selenium Grid Approach
-- **App Container**: ~100MB (no browsers)
-- **Grid Containers**: Separate, optimized containers
-- **Memory**: 64MB app + 256MB per browser node
-- **Complexity**: Simple, standard architecture
-- **Scaling**: Independent scaling of app vs browsers
-
-## 📝 Available Commands
-
-| Command | Description |
-|---------|-------------|
-| `make help` | Show all available commands |
-| `make install` | Install dependencies |
-| `make dev` | Install dev dependencies |
-| `make format` | Format code with ruff |
-| `make lint` | Lint code with ruff |
-| `make lint-fix` | Auto-fix lint issues |
-| `make check` | Run both lint and format check |
-| `make test` | Run tests |
-| `make run` | Run the application |
-| `make grid-up` | Start Selenium Grid |
-| `make grid-down` | Stop Selenium Grid |
-| `make grid-logs` | View Grid logs |
-| `make clean` | Clean cache files |
-| `make docker-build` | Build app Docker image |
-
-## 🔧 Customizing for Your Project
-
-### 1. Update Project Metadata
-```toml
-# pyproject.toml
-[project]
-name = "your-scraper-project"
-description = "Your web scraping application"
-```
-
-### 2. Add Dependencies
-```bash
-uv add requests beautifulsoup4 pandas
-uv add --dev pytest-mock pytest-asyncio
-```
-
-### 3. Configure Grid Scaling
-```yaml
-# docker-compose.yml
-chrome:
-  # ... existing config
-  deploy:
-    replicas: 3  # Scale Chrome nodes
-```
-
-### 4. Custom Browser Options
-```python
-# Enhanced Chrome options
-options = ChromeOptions()
-options.add_argument("--disable-images")
-options.add_argument("--disable-javascript")
-options.add_experimental_option("prefs", {
-    "profile.managed_default_content_settings.images": 2
-})
-```
-
-## 🚨 Troubleshooting
+## 🔍 Troubleshooting
 
 ### Common Issues
 
-**Grid not starting**
+**1. Selenium not connecting**
 ```bash
-# Check Docker
+# Check if containers are running
+docker ps
+
+# Check logs
+make grid-logs
+
+# Restart services
+make docker-down && make docker-up
+```
+
+**2. VNC not accessible**
+```bash
+# Check port mapping
 docker-compose ps
 
-# View logs
-docker-compose logs selenium-hub
+# Ensure port 7900 is available
+lsof -i :7900
 ```
 
-**Connection refused**
+**3. ARM64 (M1 Mac) Issues**
+The project automatically uses `seleniarm/standalone-chromium` for ARM environments. If you encounter issues:
+
 ```bash
-# Verify Grid is running
-curl http://localhost:4444/status
+# Force pull ARM image
+docker pull seleniarm/standalone-chromium:latest
 
-# Check Grid console
-open http://localhost:4444
+# Clear Docker cache
+docker system prune -a
 ```
 
-**Browser node issues**
+**4. Tests failing**
 ```bash
-# Check node registration
-docker-compose logs chrome
-docker-compose logs firefox
+# Install test dependencies
+uv sync --dev
 
-# Restart nodes
-docker-compose restart chrome firefox
+# Run with verbose output
+make test
 ```
 
-### Grid Health Check
-```bash
-# Check Grid status
-curl -s http://localhost:4444/status | jq .
+## 🎯 Next Steps
 
-# View Grid console
-open http://localhost:4444/ui#/sessions
-```
+Ready to customize for your needs?
 
-## 🎯 Use Cases
-
-This template is perfect for:
-
-- **🕷️ Web scraping** at scale
-- **🧪 E2E testing** with real browsers
-- **📊 Data collection** from dynamic sites
-- **📱 Cross-browser testing**
-- **📈 Performance monitoring**
-- **🤖 Browser automation**
-- **📰 Content aggregation**
-- **🛒 Price monitoring**
-
-## 🚀 Getting Started Checklist
-
-- [ ] Clone this repository
-- [ ] Run `uv sync` to install dependencies
-- [ ] Start Grid with `docker-compose up -d`
-- [ ] Verify Grid at `http://localhost:4444`
-- [ ] Test with `make run`
-- [ ] Watch browser via VNC at `http://localhost:7900`
-- [ ] Customize for your use case
-- [ ] Deploy to Railway or your preferred platform
+1. **Add more scrapers**: Create new methods in `StandaloneChromiumScraper`
+2. **Custom logging**: Extend `ColoredFormatter` with your own styles
+3. **Database integration**: Add SQLAlchemy or other ORMs
+4. **API endpoints**: Add FastAPI for web service functionality
+5. **Scheduled jobs**: Add cron or background task processing
 
 ## 🤝 Contributing
 
-Feel free to submit issues and enhancement requests! This template is designed to be:
-- **Simple** but powerful
-- **Standards-based** using official Selenium images
-- **Production-ready** out of the box
-- **Extensible** for any automation project
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
 
 ## 📄 License
 
-This template is open source and available under the [MIT License](LICENSE).
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-**Happy automating! 🤖**
+**Happy Scraping!** 🕷️✨
 
-*This template provides a robust, scalable foundation for browser automation using industry-standard Selenium Grid architecture.*
-# python-railway-template
+> Built with ❤️ using modern Python tooling and official Selenium Docker images.

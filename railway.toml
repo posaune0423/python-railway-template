@@ -7,4 +7,4 @@ builder = "DOCKERFILE"
 [deploy]
 startCommand = "app"
 restartPolicyType = "NEVER"
-cronSchedule = "*/10 * * * *"
+cronSchedule = "0 0 * * *"
